@@ -3,6 +3,8 @@
 from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from langchain_openai import ChatOpenAI
+from langchain_core.messages import trim_messages
+import psycopg
 
 from whatsapp_agent.settings import settings
 from whatsapp_agent.graphs.whatsapp_bot.state import ChatState
@@ -22,9 +24,24 @@ def get_llm() -> ChatOpenAI:
 async def agent_node(state: ChatState) -> dict:
     """
     Main agent node - processes messages and generates response.
+    Limits history to last 20 messages to manage context window and cost.
     """
     llm = get_llm()
-    response = await llm.ainvoke([SYSTEM_PROMPT, *state["messages"]])
+
+    # Trim messages to keep last 20 (plus system prompt implicitly via graph structure if managed there,
+    # but here we pass SYSTEM_PROMPT explicitly in invoke)
+    # We trim the state messages first
+    trimmed_messages = trim_messages(
+        state["messages"],
+        strategy="last",
+        token_counter=len, # Simple count-based trimming
+        max_tokens=20,     # Keep last 20 messages
+        start_on="human",  # Ensure we don't cut in middle of AI response (though less critical with simple list)
+        include_system=False, # We manually add system prompt
+        allow_partial=False,
+    )
+
+    response = await llm.ainvoke([SYSTEM_PROMPT, *trimmed_messages])
     return {"messages": [response]}
 
 
@@ -37,9 +54,10 @@ def build_graph() -> StateGraph:
     return graph
 
 
-async def create_checkpointer() -> AsyncPostgresSaver:
+async def create_checkpointer():
     """Create an async Postgres checkpointer for conversation memory."""
-    checkpointer = AsyncPostgresSaver.from_conn_string(settings.database_url)
+    conn = await psycopg.AsyncConnection.connect(settings.database_url, autocommit=True)
+    checkpointer = AsyncPostgresSaver(conn)
     await checkpointer.setup()
     return checkpointer
 

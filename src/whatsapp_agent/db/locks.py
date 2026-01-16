@@ -1,5 +1,6 @@
 """Postgres advisory locks for per-chat serialization."""
 
+import asyncio
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 import hashlib
@@ -21,14 +22,27 @@ async def advisory_lock(chat_id: str) -> AsyncGenerator[None, None]:
     """
     Acquire an advisory lock for the given chat_id.
     Only one worker can hold the lock at a time.
-    Lock is released when the context exits.
+    Uses pg_try_advisory_lock with a timeout loop to prevent deadlocks.
     """
     lock_key = _chat_id_to_lock_key(chat_id)
-    
+
     async with get_conn() as conn:
         async with conn.cursor() as cur:
-            # Acquire lock (blocks until available)
-            await cur.execute("SELECT pg_advisory_lock(%s)", (lock_key,))
+            # Try to acquire lock with timeout (5 seconds)
+            acquired = False
+            for _ in range(50):  # 50 * 0.1s = 5s
+                await cur.execute("SELECT pg_try_advisory_lock(%s)", (lock_key,))
+                result = await cur.fetchone()
+                if result and result[0]:
+                    acquired = True
+                    break
+                await asyncio.sleep(0.1)
+
+            if not acquired:
+                # If we can't get the lock, it means another worker is processing this chat
+                # We raise an error so the background task fails gracefully (or could just return)
+                raise TimeoutError(f"Could not acquire lock for chat {chat_id} after 5s")
+
             try:
                 yield
             finally:

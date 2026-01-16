@@ -13,27 +13,30 @@ class IncomingMessage:
     text: str
     is_group: bool
     timestamp: int
+    from_me: bool  # True if sent by operator (account owner), False if from user
 
 
 def normalize_webhook_payload(payload: dict[str, Any]) -> IncomingMessage | None:
     """
     Normalize an Evolution API webhook payload into an IncomingMessage.
-    
-    Returns None if the payload is not a valid incoming message
-    (e.g., status updates, outgoing messages, etc.)
+
+    Returns None if the payload is not a valid message
+    (e.g., status updates, empty messages, etc.)
+
+    Note: We now capture BOTH user messages AND operator messages (fromMe=True)
+    to provide full context to the AI.
     """
-    # Check event type - we only want incoming messages
+    # Check event type - we only want messages
     event = payload.get("event")
     if event != "messages.upsert":
         return None
-    
+
     data = payload.get("data", {})
-    
-    # Skip if this is a message we sent (fromMe = True)
+
+    # Check if this is a message we sent (operator message)
     key = data.get("key", {})
-    if key.get("fromMe", False):
-        return None
-    
+    from_me = key.get("fromMe", False)
+
     # Extract message content
     message = data.get("message", {})
     
@@ -63,4 +66,5 @@ def normalize_webhook_payload(payload: dict[str, Any]) -> IncomingMessage | None
         text=text.strip(),
         is_group=is_group,
         timestamp=data.get("messageTimestamp", 0),
+        from_me=from_me,
     )

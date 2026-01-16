@@ -11,21 +11,28 @@ async def insert_inbound_message(
     chat_id: str,
     message_id: str,
     text: str,
+    is_from_me: bool = False,
 ) -> bool:
     """
     Insert an inbound message. Returns True if inserted, False if duplicate.
     Uses ON CONFLICT DO NOTHING for idempotency.
+
+    Args:
+        chat_id: The WhatsApp chat ID
+        message_id: The Evolution message ID (for dedupe)
+        text: The message content
+        is_from_me: True if sent by operator, False if from user
     """
     async with get_conn() as conn:
         async with conn.cursor() as cur:
             await cur.execute(
                 """
-                INSERT INTO inbound_messages (chat_id, message_id, text)
-                VALUES (%s, %s, %s)
+                INSERT INTO inbound_messages (chat_id, message_id, text, is_from_me)
+                VALUES (%s, %s, %s, %s)
                 ON CONFLICT (message_id) DO NOTHING
                 RETURNING id
                 """,
-                (chat_id, message_id, text),
+                (chat_id, message_id, text, is_from_me),
             )
             result = await cur.fetchone()
             await conn.commit()
@@ -49,16 +56,16 @@ async def get_last_message_time(chat_id: str) -> datetime | None:
             return row[0] if row else None
 
 
-async def fetch_unprocessed_messages(chat_id: str) -> list[tuple[int, str, datetime]]:
+async def fetch_unprocessed_messages(chat_id: str) -> list[tuple[int, str, datetime, bool]]:
     """
     Fetch all unprocessed messages for a chat, ordered by received_at.
-    Returns list of (id, text, received_at) tuples.
+    Returns list of (id, text, received_at, is_from_me) tuples.
     """
     async with get_conn() as conn:
         async with conn.cursor() as cur:
             await cur.execute(
                 """
-                SELECT id, text, received_at FROM inbound_messages
+                SELECT id, text, received_at, is_from_me FROM inbound_messages
                 WHERE chat_id = %s AND processed_at IS NULL
                 ORDER BY received_at ASC
                 """,

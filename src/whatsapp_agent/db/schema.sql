@@ -1,12 +1,13 @@
 -- WhatsApp Agent Database Schema
 -- Run: psql $DATABASE_URL -f src/whatsapp_agent/db/schema.sql
 
--- Inbound messages from WhatsApp
+-- Inbound messages from WhatsApp (includes both user and operator messages)
 CREATE TABLE IF NOT EXISTS inbound_messages (
     id BIGSERIAL PRIMARY KEY,
     chat_id TEXT NOT NULL,
     message_id TEXT NOT NULL UNIQUE,  -- Evolution message ID for dedupe
     text TEXT NOT NULL,
+    is_from_me BOOLEAN NOT NULL DEFAULT FALSE,  -- TRUE = operator sent, FALSE = user sent
     received_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     processed_at TIMESTAMPTZ  -- NULL = not yet processed
 );

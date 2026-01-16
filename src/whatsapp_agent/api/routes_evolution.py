@@ -34,13 +34,14 @@ async def evolution_webhook(request: Request, background_tasks: BackgroundTasks)
         # Not a message we care about (status update, outgoing, etc.)
         return {"ok": True, "action": "ignored"}
     
-    logger.info(f"Received message from {message.chat_id}: {message.text[:50]}...")
-    
+    logger.info(f"Received message from {message.chat_id} (from_me={message.from_me}): {message.text[:50]}...")
+
     # Insert to DB (dedupe by message_id)
     inserted = await insert_inbound_message(
         chat_id=message.chat_id,
         message_id=message.message_id,
         text=message.text,
+        is_from_me=message.from_me,
     )
     
     if not inserted:

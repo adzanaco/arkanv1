@@ -20,7 +20,7 @@ image = (
         "psycopg-pool>=3.2.0",
         "pydantic-settings>=2.6.0",
     )
-    .copy_local_dir("src/whatsapp_agent", "/root/whatsapp_agent")
+    .add_local_dir("src/whatsapp_agent", "/root/whatsapp_agent")
 )
 
 # Create a secret for environment variables

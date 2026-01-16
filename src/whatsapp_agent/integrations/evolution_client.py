@@ -1,6 +1,7 @@
 """Evolution API client for sending messages and typing indicators."""
 
 import httpx
+from urllib.parse import quote
 
 from whatsapp_agent.settings import settings
 
@@ -16,7 +17,7 @@ class EvolutionClient:
     ):
         self.base_url = (base_url or settings.evolution_api_url).rstrip("/")
         self.api_key = api_key or settings.evolution_api_key
-        self.instance = instance or settings.evolution_instance
+        self.instance = quote(instance or settings.evolution_instance)
         self._headers = {"apikey": self.api_key}
 
     async def send_text(self, to: str, text: str) -> dict:
@@ -52,7 +53,7 @@ class EvolutionClient:
         Returns:
             Evolution API response
         """
-        url = f"{self.base_url}/chat/presence/{self.instance}"
+        url = f"{self.base_url}/chat/sendPresence/{self.instance}"
         payload = {
             "number": to,
             "presence": "composing",
