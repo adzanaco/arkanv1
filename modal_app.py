@@ -31,9 +31,9 @@ secrets = modal.Secret.from_name("whatsapp-agent-secrets")
 @app.function(
     image=image,
     secrets=[secrets],
-    allow_concurrent_inputs=100,
-    container_idle_timeout=300,
+    scaledown_window=300,
 )
+@modal.concurrent(max_inputs=100)
 @modal.asgi_app()
 def fastapi_app():
     """Serve the FastAPI application."""
