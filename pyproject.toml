@@ -15,6 +15,7 @@ dependencies = [
     "psycopg[binary]>=3.2.0",
     "pydantic-settings>=2.6.0",
     "modal>=0.68.0",
+    "langsmith>=0.1.0",
 ]
 
 [project.optional-dependencies]

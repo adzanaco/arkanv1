@@ -9,7 +9,7 @@
 | Modal Dashboard | https://modal.com/apps/adzanaco/main/deployed/whatsapp-agent |
 | Evolution API | https://n8nmemory-evolution-api.vxpcvk.easypanel.host |
 | Evolution Instance | `Raed Moral` (URL-encoded in code due to space) |
-| Postgres | Hosted on Hetzner via Easypanel at `easypanel.adzana.ae:5430` |
+| Postgres | Hosted on Hetzner via Easypanel at `vxpcvk.easypanel.host:5430` |
 | Database | `n8nmemory` |
 
 ## Quick Reference
@@ -23,7 +23,11 @@
 ## Current Configuration
 
 Modal secrets are stored in `whatsapp-agent-secrets`:
-- `DATABASE_URL` = `postgresql://postgres:****@easypanel.adzana.ae:5430/n8nmemory?sslmode=disable`
+- `DATABASE_URL` = `postgresql://postgres:****@vxpcvk.easypanel.host:5430/n8nmemory?sslmode=disable`
+
+## Recent Change
+
+- Updated `DATABASE_URL` host to `vxpcvk.easypanel.host` (Modal secret).
 - `OPENROUTER_API_KEY` = configured
 - `OPENROUTER_MODEL` = `openai/gpt-5.2`
 - `EVOLUTION_API_URL` = `https://n8nmemory-evolution-api.vxpcvk.easypanel.host`

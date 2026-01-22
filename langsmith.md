@@ -95,9 +95,9 @@ dependencies = [
 
 **Local development (.env):**
 ```bash
-LANGSMITH_TRACING=true
-LANGSMITH_API_KEY=ls_your_key_here
-LANGSMITH_PROJECT=whatsapp-agent
+LANGCHAIN_TRACING_V2=true
+LANGCHAIN_API_KEY=ls_your_key_here
+LANGCHAIN_PROJECT=whatsapp-agent
 ```
 
 **Modal deployment:**
@@ -106,9 +106,9 @@ LANGSMITH_PROJECT=whatsapp-agent
   DATABASE_URL="..." \
   OPENROUTER_API_KEY="..." \
   # ... existing secrets ... \
-  LANGSMITH_TRACING="true" \
-  LANGSMITH_API_KEY="ls_your_key_here" \
-  LANGSMITH_PROJECT="whatsapp-agent"
+  LANGCHAIN_TRACING_V2="true" \
+  LANGCHAIN_API_KEY="ls_your_key_here" \
+  LANGCHAIN_PROJECT="whatsapp-agent"
 ```
 
 ### 4. No Code Changes Required

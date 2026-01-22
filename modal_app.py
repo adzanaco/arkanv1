@@ -19,6 +19,7 @@ image = (
         "psycopg[binary]>=3.2.0",
         "psycopg-pool>=3.2.0",
         "pydantic-settings>=2.6.0",
+        "langsmith>=0.1.0",
     )
     .add_local_dir("src/whatsapp_agent", "/root/whatsapp_agent")
 )
